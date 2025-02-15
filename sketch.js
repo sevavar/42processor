@@ -1,14 +1,13 @@
 // Configuration object to store all constants and settings
 const config = {
-
-  cols: 60,
+  cols: 120,
   rows: 20,
-  pixelSize: 30,
-  margin: 6,
+  pixelSize: 20,
+  margin: 4,
   delay: 0,
   maxSubdivision: 4,
-  bgColor: '#60636B',
-  colors: ['#B7B7B7', '#ff0000', '#0f0', '#00f'], // Default colors
+  bgColor: '#222222',
+  colors: ['#B7B7B7', '#FF2020', '#0d0', '#2D2DFF'], // Default colors
   brightnessThresholds: [95, 60, 30, 10, 0],
   subdivisionLevels: [],
   toggles: [true, true, true, true], // Toggle states for all colors
@@ -16,7 +15,10 @@ const config = {
   overlay: false,
   processingMode: false,
   processingIntensity: 0.1,
-  processingSpeed: 20
+  processingSpeed: 20,
+  regenerateOnRecord: true, // New configuration for regenerate on record
+  recordDuration: 6, // Default duration for GIF recording in seconds
+  recordOnDrop: false // New configuration for recording on image drop
 };
 
 // State management
@@ -114,7 +116,7 @@ class UIManager {
     });
 
     // Maximum Subdivision control
-    this.createSlider('Max Subdivision', 1, 5, config.maxSubdivision, (value) => {
+    this.createSlider('Symbols:', 1, 5, config.maxSubdivision, (value) => {
       config.maxSubdivision = value;
     });
 
@@ -237,6 +239,43 @@ class UIManager {
     recolorBtn.style('cursor', 'pointer');
     recolorBtn.mousePressed(() => ColorManager.initializePixelColors());
 
+    // Add Regenerate on Record checkbox
+    const regenerateOnRecordContainer = createDiv('');
+    regenerateOnRecordContainer.parent(state.ui.controls);
+    regenerateOnRecordContainer.style('margin-bottom', '20px');
+
+    const regenerateOnRecordCheck = createCheckbox('Regenerate on Record', config.regenerateOnRecord);
+    regenerateOnRecordCheck.parent(regenerateOnRecordContainer);
+    regenerateOnRecordCheck.changed(() => {
+      config.regenerateOnRecord = regenerateOnRecordCheck.checked();
+    });
+
+    // Add Record Duration input field
+    const recordDurationContainer = createDiv('');
+    recordDurationContainer.parent(state.ui.controls);
+    recordDurationContainer.style('margin-bottom', '20px');
+
+    createSpan('Record Duration (seconds): ').parent(recordDurationContainer);
+    const recordDurationInput = createInput(config.recordDuration.toString(), 'number');
+    recordDurationInput.parent(recordDurationContainer);
+    recordDurationInput.input(() => {
+      const value = parseInt(recordDurationInput.value());
+      if (!isNaN(value) && value > 0) {
+        config.recordDuration = value;
+      }
+    });
+
+    // Add Record on Drop checkbox
+    const recordOnDropContainer = createDiv('');
+    recordOnDropContainer.parent(state.ui.controls);
+    recordOnDropContainer.style('margin-bottom', '20px');
+
+    const recordOnDropCheck = createCheckbox('Record on Drop', config.recordOnDrop);
+    recordOnDropCheck.parent(recordOnDropContainer);
+    recordOnDropCheck.changed(() => {
+      config.recordOnDrop = recordOnDropCheck.checked();
+    });
+
     // Record GIF button
     const recordBtn = createButton('Record GIF');
     recordBtn.parent(state.ui.controls);
@@ -249,9 +288,11 @@ class UIManager {
     recordBtn.style('border-radius', '4px');
     recordBtn.style('cursor', 'pointer');
     recordBtn.mousePressed(() => {
-      // Trigger regeneration before recording
-      // config.subdivisionLevels = Array(config.rows).fill()
-      //   .map(() => Array(config.cols).fill(0));
+      // Trigger regeneration before recording if the checkbox is checked
+      if (config.regenerateOnRecord) {
+        config.subdivisionLevels = Array(config.rows).fill()
+          .map(() => Array(config.cols).fill(0));
+      }
       recordGIF();
     });
   }
@@ -442,11 +483,38 @@ class PixelDrawer {
         fill(bgColor);
         rect(x + (pixelSize/12) * 5, y, (pixelSize/12) * 2, pixelSize);
         break;
+        // fill(bgColor);
+        // rect(x, y, pixelSize, pixelSize);
+        // fill(color);
+        // const positions4 = [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]];
+        // positions4.forEach(([px, py]) => {
+        //   ellipse(
+        //     x + pixelSize * px,
+        //     y + pixelSize * py,
+        //     pixelSize / 2 - margin,
+        //     pixelSize / 2 - margin
+        //   );
+        // });
+        // break;
         
       case 2:
         fill(color);
         rect(x, y, pixelSize, pixelSize);
         break;
+        // fill(bgColor);
+        // rect(x, y, pixelSize, pixelSize);
+        // fill(color);
+        // const positions3 = [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]];
+        // positions3.forEach(([px, py]) => {
+        //   ellipse(
+        //     x + pixelSize * px,
+        //     y + pixelSize * py,
+        //     pixelSize / 2 - margin,
+        //     pixelSize / 2 - margin
+        //   );
+        // });
+        // break;
+        
         
       case 3:
         fill(bgColor);
@@ -454,13 +522,26 @@ class PixelDrawer {
         fill(color);
         ellipse(x + pixelSize * 0.5, y + pixelSize * 0.5, pixelSize - margin, pixelSize - margin);
         break;
+        //        fill(bgColor);
+        // rect(x, y, pixelSize, pixelSize);
+        // fill('#404347');
+        // const positions = [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]];
+        // positions.forEach(([px, py]) => {
+        //   ellipse(
+        //     x + pixelSize * px,
+        //     y + pixelSize * py,
+        //     pixelSize / 2 - margin,
+        //     pixelSize / 2 - margin
+        //   );
+        // });
+        // break;
         
       case 4:
         fill(bgColor);
         rect(x, y, pixelSize, pixelSize);
-        fill(color);
-        const positions = [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]];
-        positions.forEach(([px, py]) => {
+        fill('#404347');
+        const positions2 = [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]];
+        positions2.forEach(([px, py]) => {
           ellipse(
             x + pixelSize * px,
             y + pixelSize * py,
@@ -469,6 +550,11 @@ class PixelDrawer {
           );
         });
         break;
+        //  fill(color);
+        // rect(x + margin, y + margin, pixelSize - 2 * margin, pixelSize - 2 * margin);
+        // fill(bgColor);
+        // rect(x + (pixelSize/12) * 5, y, (pixelSize/12) * 2, pixelSize);
+        // break;
     }
   }
 }
@@ -481,9 +567,13 @@ class ImageProcessor {
       state.img = loadedImage;
       UIManager.resizeImage(); // Resize the image and canvas
       initializePixelOrder(); // Initialize pixel order after image is loaded
+
+      // Trigger recording if "Record on Drop" is enabled
+      if (config.recordOnDrop) {
+        recordGIF();
+      }
     });
   }
-
 }
 
   static getTargetSubdivision(brightnessValue) {
@@ -531,14 +621,16 @@ function draw() {
   // Handle recoloring
   UIManager.handleRecoloring();
 
-  // Processing mode animation
 // Processing mode animation
 if (config.processingMode && frameCount % config.processingSpeed === 0) {
-  // Collect all non-background pixels
+  // Collect all non-background pixels, excluding subdivision levels 3 and 4
   let activePixels = [];
   for (let y = 0; y < config.rows; y++) {
     for (let x = 0; x < config.cols; x++) {
-      if (state.pixelColors[y][x] != 0 && config.subdivisionLevels[y][x] > 0) {
+      // Check if pixel is non-background AND has subdivision level 1 or 2
+      if (state.pixelColors[y][x] > 0 && 
+          (config.subdivisionLevels[y][x] === 1 || 
+           config.subdivisionLevels[y][x] === 2)) {
         activePixels.push({x, y});
       }
     }
@@ -556,7 +648,7 @@ if (config.processingMode && frameCount % config.processingSpeed === 0) {
     const {x, y} = activePixels.splice(randomIndex, 1)[0];
     
     // Update its subdivision and color
-    config.subdivisionLevels[y][x] = floor(random(1, 5));
+    config.subdivisionLevels[y][x] = floor(random(1, 3));
     state.pixelColors[y][x] = floor(random(1, config.colors.length));
   }
 }
@@ -588,7 +680,7 @@ if (config.processingMode && frameCount % config.processingSpeed === 0) {
 }
 
 function recordGIF() {
-  saveGif('pixel-art.gif', 6, { 
+  saveGif('fortytwo.gif', config.recordDuration, { 
     units: 'seconds',
     notificationDuration: 1,
     notificationID: 'customProgressBar'
